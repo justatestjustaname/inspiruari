@@ -56,7 +56,9 @@ h1{
   display:grid;
   grid-template-columns: repeat(5, var(--w));
   gap: var(--gap);
-  justify-content:center;
+  justify-content: start;       /* links uitlijnen */
+  overflow-x: auto;             /* horizontaal scrollen mogelijk */
+  padding-bottom: 10px;         /* ruimte voor scroll */
 }
 
 .day{
@@ -166,47 +168,24 @@ const days = [
   ['27','28','29','30','31']
 ];
 
-// Links per kolom/weekdag
 const linksPerColumn = [
-  [
-'https://youtu.be/CQ9iK_yTWxs',
-'https://youtu.be/vBWdYrO6y_E',
-'https://youtu.be/2fY-iSzbls8',
-'https://youtu.be/rhRpxYhyavQ'
-  ],
-  [
-  'https://youtu.be/oHJBdDSTbLw',
-'https://youtu.be/Pn7VdmcCjcA',
-'https://youtu.be/ncM8eIvI1Lc',
-'https://youtu.be/aA_ZHAs4M9k'
-  ],
-  [
- 'https://youtu.be/wQKZlps9W0k',
-'https://youtu.be/6MUcuqbGTxc',
-'https://youtu.be/P-4tFdUWn1Q',
-'https://youtu.be/0YMCWR8jzpU'
-  ],
-  [
-'https://youtu.be/DjA0oiMI3ME',
-'https://youtu.be/rY_b3y9RMUc',
-'https://youtu.be/pJgvgD-vjIc',
-'https://youtu.be/dGFLzIk9WG8'
-  ],
-  [
-'https://www.instagram.com/reel/DRxKAGqjLSd/?igsh=eGRkYjNubGF2M3Aw',
-'https://www.youtube.com/watch?v=KRZzq801s_A',
-'https://www.instagram.com/reel/DO8d-MNiFOU/?igsh=MTBra2F1OGVwc2F6eg==',
-'https://vimeo.com/1019818521'
-  ]
+  ['https://youtu.be/CQ9iK_yTWxs','https://youtu.be/vBWdYrO6y_E','https://youtu.be/2fY-iSzbls8','https://youtu.be/rhRpxYhyavQ'],
+  ['https://youtu.be/oHJBdDSTbLw','https://youtu.be/Pn7VdmcCjcA','https://youtu.be/ncM8eIvI1Lc','https://youtu.be/aA_ZHAs4M9k'],
+  ['https://youtu.be/wQKZlps9W0k','https://youtu.be/6MUcuqbGTxc','https://youtu.be/P-4tFdUWn1Q','https://youtu.be/0YMCWR8jzpU'],
+  ['https://youtu.be/DjA0oiMI3ME','https://youtu.be/rY_b3y9RMUc','https://youtu.be/pJgvgD-vjIc','https://youtu.be/dGFLzIk9WG8'],
+  ['https://www.instagram.com/reel/DRxKAGqjLSd/?igsh=eGRkYjNubGF2M3Aw','https://www.youtube.com/watch?v=KRZzq801s_A','https://www.instagram.com/reel/DO8d-MNiFOU/?igsh=MTBra2F1OGVwc2F6eg==','https://vimeo.com/1019818521']
 ];
 
 const calendar = document.getElementById('calendar');
 
 // Web Audio API
 const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-function ensureAudioContext(){
-  if(audioCtx.state==='suspended'){ audioCtx.resume(); }
-}
+function ensureAudioContext(){ if(audioCtx.state==='suspended'){ audioCtx.resume(); } }
+
+// activeer audio bij eerste interactie (mobiel)
+document.body.addEventListener('click', ()=>{ audioCtx.resume(); }, {once:true});
+document.body.addEventListener('touchstart', ()=>{ audioCtx.resume(); }, {once:true});
+
 function playWoosj(){
   ensureAudioContext();
   const osc = audioCtx.createOscillator();
@@ -267,7 +246,6 @@ days.forEach((week,r)=>{
     a.target='_blank';
     a.addEventListener('click', ev=>{
       playClick(); // geluid bij klik
-      // link opent altijd, deuren hoeven niet open te zijn
     });
     wrapper.appendChild(a);
 
@@ -278,7 +256,7 @@ days.forEach((week,r)=>{
     door.classList.add(weekdayClass);
     door.textContent=day;
 
-    // alle deuren kunnen open
+    // deuren kunnen open
     door.addEventListener('click', ()=>{
       door.classList.toggle('open');
       playWoosj();
@@ -292,4 +270,3 @@ days.forEach((week,r)=>{
 
 </body>
 </html>
-
