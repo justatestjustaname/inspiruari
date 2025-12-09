@@ -2,46 +2,47 @@
 <html lang="nl">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Inspiruari Kalender - Bewegende Gradient</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Inspiruari Kalender - Mobile Friendly</title>
 <style>
-:root{
+:root {
   --w:140px;
   --gap:24px;
 }
 
 body{
+  margin:0;
+  padding:20px;
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   background: linear-gradient(270deg, #6C5CE7, #FD9644, #00B894, #0984E3, #D63031);
   background-size: 1000% 1000%;
-  animation: gradientMove 20s ease infinite;
-  margin:0;
-  padding:20px;
-  overflow-x: hidden;
+  animation: gradientMove 30s ease infinite;
+  background-attachment: fixed;
   display:flex;
   justify-content:center;
 }
 
+/* Gradient animatie */
 @keyframes gradientMove {
   0%{ background-position:0% 50%; }
   50%{ background-position:100% 50%; }
   100%{ background-position:0% 50%; }
 }
 
+/* Kalender wrapper */
 .calendar-wrapper {
-  display:flex;
-  gap:24px;
-  overflow-x:auto;
-  padding-bottom:20px;
+  display: grid;
+  grid-template-columns: repeat(5, var(--w));
+  gap: var(--gap);
 }
 
-.calendar-column{
+.column {
   display:flex;
   flex-direction:column;
-  gap:18px;
+  gap: 18px;
 }
 
-/* Titel en headers per kolom */
+/* Header */
 .column-header{
   text-align:center;
   font-weight:700;
@@ -70,9 +71,7 @@ body{
   cursor:pointer;
   transition: transform 0.3s ease;
 }
-.day:hover{
-  transform: scale(1.05);
-}
+.day:hover{ transform: scale(1.05); }
 
 /* Maandag t/m vrijdag kleuren */
 .mon{ background:#6C5CE7; }
@@ -97,14 +96,24 @@ body{
 }
 
 @media (max-width:780px){
-  :root{ --w:98px; --gap:16px; }
+  /* mobiel: horizontaal scrollbare flex */
+  .calendar-wrapper {
+    display:flex;
+    overflow-x:auto;
+    gap:16px;
+    padding-bottom:10px;
+  }
+  .column{
+    flex:0 0 auto; /* width van column = inhoud */
+  }
+  :root{ --w:98px; }
 }
 </style>
 </head>
 <body>
 
 <div class="calendar-wrapper" id="calendar-wrapper">
-  <!-- Kolommen worden door JS toegevoegd -->
+  <!-- JS vult de kolommen -->
 </div>
 
 <script>
@@ -133,7 +142,7 @@ const wrapper = document.getElementById('calendar-wrapper');
 // Maak kolommen
 for(let c=0;c<5;c++){
   const colDiv = document.createElement('div');
-  colDiv.className='calendar-column';
+  colDiv.className='column';
 
   // Header
   const header = document.createElement('div');
