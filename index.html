@@ -6,74 +6,71 @@
 <title>Inspiruari Kalender - Testmodus</title>
 <style>
 :root{
-  --w: clamp(60px, 12vw, 140px);       /* kolombreedte schaalbaar */
-  --gap: clamp(6px, 2vw, 24px);        /* grid-gap schaalbaar */
+  --gap: 6px; /* flexibele gap */
   --grad: linear-gradient(90deg,#6C5CE7,#FD9644,#00B894,#0984E3,#D63031);
 }
 
 body{
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   background:#f4f6f8;
-  padding: clamp(12px, 3vw, 34px);
+  margin:0;
+  padding:12px;
   display:flex;
-  align-items:center;
   flex-direction:column;
-  gap: clamp(10px, 2vw, 18px);
+  align-items:center;
+  gap:12px;
 }
 
 h1{
   margin:0;
-  padding: clamp(10px,2vw,36px);
+  padding:10px;
   border-radius:12px;
   background:var(--grad);
   color:#fff;
   font-weight:700;
-  font-size: clamp(16px, 2.5vw, 28px);
+  font-size:16px;
   text-align:center;
 }
 
-.header-row{
+/* Grid met exact 5 kolommen die automatisch passen */
+.header-row, .calendar{
   display:grid;
-  grid-template-columns: repeat(5, var(--w));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--gap);
+  width: 100%;
+  max-width: 100%; /* past altijd op scherm */
 }
 
+/* Headers */
 .header{
-  width: var(--w);
-  padding: 4px 2px;
-  border-radius:10px;
+  background:#888;
   color:#fff;
   text-align:center;
   font-weight:600;
-  font-size: clamp(10px, 1.2vw, 14px);
+  padding:4px 2px;
+  border-radius:8px;
+  font-size:10px;
 }
 
+/* Kleuren per dag */
 .h-mon{ background:#6C5CE7; }
 .h-tue{ background:#FD9644; }
 .h-wed{ background:#00B894; }
 .h-thu{ background:#0984E3; }
 .h-fri{ background:#D63031; }
 
-.calendar{
-  display:grid;
-  grid-template-columns: repeat(5, var(--w));
-  gap: var(--gap);
-  justify-content: start;
-  overflow-x: auto;
-  padding-bottom: 10px;
-}
-
+/* Kalenderdagen */
 .day{
-  width: var(--w);
-  height: var(--w);
-  border-radius:50%;
   position:relative;
+  border-radius:50%;
   overflow:hidden;
-  box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
   background:#eee;
-  display:block;
+  width:100%;
+  aspect-ratio:1 / 1; /* cirkel blijft rond */
 }
 
+/* Thumbnail binnen dag */
 .thumb{
   position:absolute;
   inset:0;
@@ -85,6 +82,7 @@ h1{
   pointer-events:none;
 }
 
+/* Kliklaag */
 .link-layer{
   position:absolute;
   inset:0;
@@ -92,6 +90,7 @@ h1{
   display:block;
 }
 
+/* Deuren */
 .door{
   position:absolute;
   inset:0;
@@ -102,7 +101,7 @@ h1{
   justify-content:center;
   color:#fff;
   font-weight:700;
-  font-size: clamp(12px,1.5vw,18px);
+  font-size:12px;
   cursor:pointer;
   transform-origin:left center;
   transition: transform 0.62s cubic-bezier(.2,.9,.2,1), box-shadow .25s ease;
@@ -117,15 +116,16 @@ h1{
 
 .door.open{
   transform: rotateY(-100deg);
-  box-shadow: 0 18px 36px rgba(0,0,0,0.18);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
 }
 
+/* Freaky placeholder */
 .freak-placeholder{
   display:flex;
   align-items:center;
   justify-content:center;
   font-weight:700;
-  font-size: clamp(10px,1.3vw,16px);
+  font-size:10px;
   color:#fff;
   background:#D63031;
   border-radius:50%;
@@ -133,24 +133,6 @@ h1{
   height:100%;
   text-align:center;
   pointer-events:none;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.freak-placeholder:hover{
-  transform: scale(1.05);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
-}
-
-/* Extra responsive tweaks voor zeer smalle schermen */
-@media (max-width: 380px){
-  :root{
-    --w: 50px;
-    --gap: 4px;
-  }
-  body{ padding: 10px; }
-  h1{ font-size: 14px; padding: 8px 10px; }
-  .header{ font-size: 9px; padding: 2px 1px; }
-  .door{ font-size: 10px; }
-  .freak-placeholder{ font-size: 9px; }
 }
 </style>
 </head>
