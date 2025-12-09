@@ -188,10 +188,15 @@ const linksPerColumn = [
 const calendar = document.getElementById('calendar');
 
 // Web Audio API
-const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-function ensureAudioContext(){ if(audioCtx.state==='suspended'){ audioCtx.resume(); } }
-document.body.addEventListener('click', ()=>{ audioCtx.resume(); }, {once:true});
-document.body.addEventListener('touchstart', ()=>{ audioCtx.resume(); }, {once:true});
+let audioCtx;
+function ensureAudioContext(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  }
+  if(audioCtx.state==='suspended'){ audioCtx.resume(); }
+}
+document.body.addEventListener('click', ()=>{ ensureAudioContext(); }, {once:true});
+document.body.addEventListener('touchstart', ()=>{ ensureAudioContext(); }, {once:true});
 
 function playWoosj(){
   ensureAudioContext();
@@ -220,8 +225,16 @@ function playClick(){
 }
 
 // Helper thumbnail
-function getYoutubeId(u){ const m=u.match(/(?:v=|youtu\.be\/|v\/|watch\?v=)([A-Za-z0-9_\-]+)/); return m?m[1]:null; }
-function thumbFor(url){ if(!url) return null; const y=getYoutubeId(url); if(y) return `https://img.youtube.com/vi/${y}/hqdefault.jpg`; return null; }
+function getYoutubeId(u){ 
+  const m=u.match(/(?:v=|youtu\.be\/|v\/|watch\?v=)([A-Za-z0-9_\-]+)/); 
+  return m?m[1]:null; 
+}
+function thumbFor(url){ 
+  if(!url) return null; 
+  const y=getYoutubeId(url); 
+  if(y) return `https://img.youtube.com/vi/${y}/hqdefault.jpg`; 
+  return null; 
+}
 
 // Build calendar
 days.forEach((week,r)=>{
@@ -252,7 +265,9 @@ days.forEach((week,r)=>{
     a.className='link-layer';
     a.target='_blank';
     a.addEventListener('click', ev=>{
+      ev.preventDefault(); // voorkomt dat Firefox het openen blokkeert
       playClick();
+      if(url) window.open(url,'_blank'); // opent de link handmatig
     });
     wrapper.appendChild(a);
 
@@ -274,5 +289,7 @@ days.forEach((week,r)=>{
 });
 </script>
 
+
 </body>
 </html>
+
