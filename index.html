@@ -169,7 +169,9 @@ h1{
 <div class="calendar" id="calendar" aria-live="polite"></div>
 
 <script>
+// ---------------------------
 // Data
+// ---------------------------
 const days = [
   ['6','7','8','9','10'],
   ['13','14','15','16','17'],
@@ -187,98 +189,136 @@ const linksPerColumn = [
 
 const calendar = document.getElementById('calendar');
 
-// Web Audio API
-let audioCtx;
-function ensureAudioContext(){
-  if(!audioCtx){
-    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+
+// ---------------------------
+// AudioContext (iPhone-safe)
+// ---------------------------
+let audioCtx = null;
+
+function ensureAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
-  if(audioCtx.state==='suspended'){ audioCtx.resume(); }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
 }
-document.body.addEventListener('click', ()=>{ ensureAudioContext(); }, {once:true});
-document.body.addEventListener('touchstart', ()=>{ ensureAudioContext(); }, {once:true});
 
-function playWoosj(){
+// iOS moet eerst user-interactie hebben gehad
+['click', 'touchstart'].forEach(ev => {
+  document.body.addEventListener(ev, ensureAudioContext, { once: true });
+});
+
+
+// ---------------------------
+// Sounds
+// ---------------------------
+function playWoosj() {
   ensureAudioContext();
+  if (!audioCtx) return;
+
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.type='sine';
-  osc.frequency.setValueAtTime(200,audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(800,audioCtx.currentTime+0.4);
-  gain.gain.setValueAtTime(0.2,audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.4);
+
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.4);
+
+  gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+
   osc.connect(gain).connect(audioCtx.destination);
   osc.start();
-  osc.stop(audioCtx.currentTime+0.4);
+  osc.stop(audioCtx.currentTime + 0.4);
 }
-function playClick(){
+
+function playClick() {
   ensureAudioContext();
+  if (!audioCtx) return;
+
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.type='square';
-  osc.frequency.setValueAtTime(1000,audioCtx.currentTime);
-  gain.gain.setValueAtTime(0.15,audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.08);
+
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+
+  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+
   osc.connect(gain).connect(audioCtx.destination);
   osc.start();
-  osc.stop(audioCtx.currentTime+0.08);
+  osc.stop(audioCtx.currentTime + 0.08);
 }
 
-// Helper thumbnail
-function getYoutubeId(u){ 
-  const m=u.match(/(?:v=|youtu\.be\/|v\/|watch\?v=)([A-Za-z0-9_\-]+)/); 
-  return m?m[1]:null; 
-}
-function thumbFor(url){ 
-  if(!url) return null; 
-  const y=getYoutubeId(url); 
-  if(y) return `https://img.youtube.com/vi/${y}/hqdefault.jpg`; 
-  return null; 
+
+// ---------------------------
+// Thumbnail helpers
+// ---------------------------
+function getYoutubeId(url) {
+  if (!url) return null;
+  const m = url.match(/(?:v=|youtu\.be\/|v\/|watch\?v=)([A-Za-z0-9_\-]+)/);
+  return m ? m[1] : null;
 }
 
+function thumbFor(url) {
+  const id = getYoutubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
+}
+
+
+// ---------------------------
 // Build calendar
-days.forEach((week,r)=>{
-  week.forEach((day,c)=>{
-    const wrapper=document.createElement('div');
-    wrapper.className='day';
-    wrapper.setAttribute('data-row',r);
-    wrapper.setAttribute('data-col',c);
+// ---------------------------
+days.forEach((week, r) => {
+  week.forEach((day, c) => {
 
-    const url=(linksPerColumn[c] && linksPerColumn[c][r]) ? linksPerColumn[c][r] : '';
+    // Day wrapper
+    const wrapper = document.createElement('div');
+    wrapper.className = 'day';
 
-    const thumb=thumbFor(url);
-    if(thumb && c!==4){
-      const img=document.createElement('img');
-      img.src=thumb;
-      img.alt=`Thumbnail dag ${day}`;
-      img.className='thumb';
+    const url = (linksPerColumn[c] && linksPerColumn[c][r]) ? linksPerColumn[c][r] : '';
+
+    // Thumbnail or freak placeholder
+    const thumb = thumbFor(url);
+
+    if (thumb && c !== 4) {
+      const img = document.createElement('img');
+      img.src = thumb;
+      img.alt = `Thumbnail dag ${day}`;
+      img.className = 'thumb';
       wrapper.appendChild(img);
-    } else if(c===4){
-      const placeholder=document.createElement('div');
-      placeholder.className='freak-placeholder';
-      placeholder.textContent='Freak!';
+    } else if (c === 4) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'freak-placeholder';
+      placeholder.textContent = 'Freak!';
       wrapper.appendChild(placeholder);
     }
 
-    const a=document.createElement('a');
-    a.href=url||'#';
-    a.className='link-layer';
-    a.target='_blank';
-    a.addEventListener('click', ev=>{
-      ev.preventDefault(); // voorkomt dat Firefox het openen blokkeert
+    // Link layer
+    const a = document.createElement('a');
+    a.href = url || '#';
+    a.className = 'link-layer';
+    a.target = '_blank';
+
+    // iPhone/Safari blokkeert target=_blank soms → handmatig oplossen
+    a.addEventListener('click', ev => {
+      ev.preventDefault();
       playClick();
-      if(url) window.open(url,'_blank'); // opent de link handmatig
+      if (url) window.open(url, '_blank');
     });
+
     wrapper.appendChild(a);
 
-    const door=document.createElement('button');
-    door.type='button';
-    door.className='door';
-    const weekdayClass=['mon','tue','wed','thu','fri'][c]||'mon';
-    door.classList.add(weekdayClass);
-    door.textContent=day;
+    // Door button
+    const door = document.createElement('button');
+    door.type = 'button';
+    door.className = 'door';
 
-    door.addEventListener('click', ()=>{
+    const weekdayClass = ['mon', 'tue', 'wed', 'thu', 'fri'][c] || 'mon';
+    door.classList.add(weekdayClass);
+    door.textContent = day;
+
+    door.addEventListener('click', () => {
       door.classList.toggle('open');
       playWoosj();
     });
@@ -290,6 +330,8 @@ days.forEach((week,r)=>{
 </script>
 
 
+
 </body>
 </html>
+
 
