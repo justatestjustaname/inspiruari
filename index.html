@@ -4,59 +4,12 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Inspiruari Kalender - Testmodus</title>
-
 <style>
 :root{
-  --w: clamp(60px, 12vw, 140px);
-  --gap: clamp(6px, 2vw, 24px);
+  --w: clamp(60px, 12vw, 140px);       /* kolombreedte schaalbaar */
+  --gap: clamp(6px, 2vw, 24px);        /* grid-gap schaalbaar */
   --grad: linear-gradient(90deg,#6C5CE7,#FD9644,#00B894,#0984E3,#D63031);
 }
-
-/* ------------------------------------------------ */
-/*  🔥 bewegende overlay-blend gradient achtergrond */
-/* ------------------------------------------------ */
-
-.bg-gradient {
-  position: fixed;
-  inset: 0;
-  z-index: 2; /* staat boven ALLES maar blend -> verstoort niets */
-  pointer-events: none;
-  mix-blend-mode: overlay;
-  opacity: 0.6;
-
-  background: linear-gradient(120deg,
-      #6C5CE7 0%,
-      #FD9644 25%,
-      #00B894 50%,
-      #0984E3 75%,
-      #D63031 100%);
-  background-size: 200% 200%;
-}
-
-.bg-gradient::before {
-  content: "";
-  position: absolute;
-  inset: -12%;
-  background: inherit;
-  will-change: transform;
-  animation: bg-rotate 28s linear infinite;
-}
-
-@keyframes bg-rotate {
-  0%   { transform: rotate(0deg) scale(1); }
-  25%  { transform: rotate(15deg) scale(1.05); }
-  50%  { transform: rotate(30deg) scale(1.1); }
-  75%  { transform: rotate(15deg) scale(1.05); }
-  100% { transform: rotate(0deg) scale(1); }
-}
-
-@media (prefers-reduced-motion:reduce){
-  .bg-gradient::before { animation:none; }
-}
-
-/* ------------------------------------------------ */
-/*  jouw bestaande styles                           */
-/* ------------------------------------------------ */
 
 body{
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
@@ -156,7 +109,6 @@ h1{
   backdrop-filter: blur(3px);
   background: rgba(0,0,0,0.48);
 }
-
 .door.mon{ background: rgba(108,92,231,0.68); }
 .door.tue{ background: rgba(253,150,68,0.68); }
 .door.wed{ background: rgba(0,184,148,0.68); }
@@ -183,13 +135,12 @@ h1{
   pointer-events:none;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-
 .freak-placeholder:hover{
   transform: scale(1.05);
   box-shadow: 0 8px 16px rgba(0,0,0,0.25);
 }
 
-/* responsive mobile tweak */
+/* Extra responsive tweaks voor zeer smalle schermen */
 @media (max-width: 380px){
   :root{
     --w: 50px;
@@ -203,11 +154,7 @@ h1{
 }
 </style>
 </head>
-
 <body>
-
-<!-- 🔥 overlay gradient boven alles -->
-<div class="bg-gradient"></div>
 
 <h1>Inspiruari Kalender - Testmodus</h1>
 
@@ -219,11 +166,12 @@ h1{
   <div class="header h-fri">Freaky Vrijdag</div>
 </div>
 
-<div class="calendar" id="calendar"></div>
+<div class="calendar" id="calendar" aria-live="polite"></div>
 
 <script>
-// jouw JS intact — niks veranderd
-
+// ---------------------------
+// Data
+// ---------------------------
 const days = [
   ['6','7','8','9','10'],
   ['13','14','15','16','17'],
@@ -241,86 +189,136 @@ const linksPerColumn = [
 
 const calendar = document.getElementById('calendar');
 
-const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-function ensureAudioContext(){ if(audioCtx.state==='suspended'){ audioCtx.resume(); } }
-document.body.addEventListener('click', ()=>{ audioCtx.resume(); }, {once:true});
-document.body.addEventListener('touchstart', ()=>{ audioCtx.resume(); }, {once:true});
 
-function playWoosj(){
+// ---------------------------
+// AudioContext (iPhone-safe)
+// ---------------------------
+let audioCtx = null;
+
+function ensureAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+// iOS moet eerst user-interactie hebben gehad
+['click', 'touchstart'].forEach(ev => {
+  document.body.addEventListener(ev, ensureAudioContext, { once: true });
+});
+
+
+// ---------------------------
+// Sounds
+// ---------------------------
+function playWoosj() {
   ensureAudioContext();
+  if (!audioCtx) return;
+
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.type='sine';
-  osc.frequency.setValueAtTime(200,audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(800,audioCtx.currentTime+0.4);
-  gain.gain.setValueAtTime(0.2,audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.4);
+
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.4);
+
+  gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+
   osc.connect(gain).connect(audioCtx.destination);
   osc.start();
-  osc.stop(audioCtx.currentTime+0.4);
+  osc.stop(audioCtx.currentTime + 0.4);
 }
 
-function playClick(){
+function playClick() {
   ensureAudioContext();
+  if (!audioCtx) return;
+
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.type='square';
-  osc.frequency.setValueAtTime(1000,audioCtx.currentTime);
-  gain.gain.setValueAtTime(0.15,audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.08);
+
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+
+  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+
   osc.connect(gain).connect(audioCtx.destination);
   osc.start();
-  osc.stop(audioCtx.currentTime+0.08);
+  osc.stop(audioCtx.currentTime + 0.08);
 }
 
-function getYoutubeId(u){ const m=u.match(/(?:v=|youtu\.be\/|v\/|watch\?v=)([A-Za-z0-9_\-]+)/); return m?m[1]:null; }
-function thumbFor(url){ 
-  if(!url) return null;
-  const y=getYoutubeId(url);
-  if(y) return `https://img.youtube.com/vi/${y}/hqdefault.jpg`;
-  return null;
+
+// ---------------------------
+// Thumbnail helpers
+// ---------------------------
+function getYoutubeId(url) {
+  if (!url) return null;
+  const m = url.match(/(?:v=|youtu\.be\/|v\/|watch\?v=)([A-Za-z0-9_\-]+)/);
+  return m ? m[1] : null;
 }
 
-days.forEach((week,r)=>{
-  week.forEach((day,c)=>{
-    const wrapper=document.createElement('div');
-    wrapper.className='day';
-    wrapper.setAttribute('data-row',r);
-    wrapper.setAttribute('data-col',c);
+function thumbFor(url) {
+  const id = getYoutubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
+}
 
-    const url=(linksPerColumn[c] && linksPerColumn[c][r]) ? linksPerColumn[c][r] : '';
 
-    const thumb=thumbFor(url);
-    if(thumb && c!==4){
-      const img=document.createElement('img');
-      img.src=thumb;
-      img.alt=`Thumbnail dag ${day}`;
-      img.className='thumb';
+// ---------------------------
+// Build calendar
+// ---------------------------
+days.forEach((week, r) => {
+  week.forEach((day, c) => {
+
+    // Day wrapper
+    const wrapper = document.createElement('div');
+    wrapper.className = 'day';
+
+    const url = (linksPerColumn[c] && linksPerColumn[c][r]) ? linksPerColumn[c][r] : '';
+
+    // Thumbnail or freak placeholder
+    const thumb = thumbFor(url);
+
+    if (thumb && c !== 4) {
+      const img = document.createElement('img');
+      img.src = thumb;
+      img.alt = `Thumbnail dag ${day}`;
+      img.className = 'thumb';
       wrapper.appendChild(img);
-    } else if(c===4){
-      const placeholder=document.createElement('div');
-      placeholder.className='freak-placeholder';
-      placeholder.textContent='Freak!';
+    } else if (c === 4) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'freak-placeholder';
+      placeholder.textContent = 'Freak!';
       wrapper.appendChild(placeholder);
     }
 
-    const a=document.createElement('a');
-    a.href=url||'#';
-    a.className='link-layer';
-    a.target='_blank';
-    a.addEventListener('click', ev=>{
+    // Link layer
+    const a = document.createElement('a');
+    a.href = url || '#';
+    a.className = 'link-layer';
+    a.target = '_blank';
+
+    // iPhone/Safari blokkeert target=_blank soms → handmatig oplossen
+    a.addEventListener('click', ev => {
+      ev.preventDefault();
       playClick();
+      if (url) window.open(url, '_blank');
     });
+
     wrapper.appendChild(a);
 
-    const door=document.createElement('button');
-    door.type='button';
-    door.className='door';
-    const weekdayClass=['mon','tue','wed','thu','fri'][c]||'mon';
-    door.classList.add(weekdayClass);
-    door.textContent=day;
+    // Door button
+    const door = document.createElement('button');
+    door.type = 'button';
+    door.className = 'door';
 
-    door.addEventListener('click', ()=>{
+    const weekdayClass = ['mon', 'tue', 'wed', 'thu', 'fri'][c] || 'mon';
+    door.classList.add(weekdayClass);
+    door.textContent = day;
+
+    door.addEventListener('click', () => {
       door.classList.toggle('open');
       playWoosj();
     });
@@ -331,5 +329,8 @@ days.forEach((week,r)=>{
 });
 </script>
 
+
+
 </body>
 </html>
+
