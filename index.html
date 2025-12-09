@@ -6,29 +6,29 @@
 <title>Inspiruari Kalender - Testmodus</title>
 <style>
 :root{
-  --w: clamp(80px, 12vw, 140px);       /* kolombreedte schaalbaar */
-  --gap: clamp(12px, 2vw, 24px);       /* grid-gap schaalbaar */
+  --w: clamp(60px, 12vw, 140px);       /* kolombreedte schaalbaar */
+  --gap: clamp(6px, 2vw, 24px);        /* grid-gap schaalbaar */
   --grad: linear-gradient(90deg,#6C5CE7,#FD9644,#00B894,#0984E3,#D63031);
 }
 
 body{
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   background:#f4f6f8;
-  padding: clamp(16px, 3vw, 34px);
+  padding: clamp(12px, 3vw, 34px);
   display:flex;
   align-items:center;
   flex-direction:column;
-  gap: clamp(12px, 2vw, 18px);
+  gap: clamp(10px, 2vw, 18px);
 }
 
 h1{
   margin:0;
-  padding: clamp(12px,2vw,36px);
+  padding: clamp(10px,2vw,36px);
   border-radius:12px;
   background:var(--grad);
   color:#fff;
   font-weight:700;
-  font-size: clamp(18px, 2.5vw, 28px);
+  font-size: clamp(16px, 2.5vw, 28px);
   text-align:center;
 }
 
@@ -40,12 +40,12 @@ h1{
 
 .header{
   width: var(--w);
-  padding: 6px 4px;
+  padding: 4px 2px;
   border-radius:10px;
   color:#fff;
   text-align:center;
   font-weight:600;
-  font-size: clamp(12px, 1.2vw, 14px);
+  font-size: clamp(10px, 1.2vw, 14px);
 }
 
 .h-mon{ background:#6C5CE7; }
@@ -102,7 +102,7 @@ h1{
   justify-content:center;
   color:#fff;
   font-weight:700;
-  font-size: clamp(14px,1.5vw,18px);
+  font-size: clamp(12px,1.5vw,18px);
   cursor:pointer;
   transform-origin:left center;
   transition: transform 0.62s cubic-bezier(.2,.9,.2,1), box-shadow .25s ease;
@@ -120,13 +120,12 @@ h1{
   box-shadow: 0 18px 36px rgba(0,0,0,0.18);
 }
 
-/* Freaky Friday placeholder */
 .freak-placeholder{
   display:flex;
   align-items:center;
   justify-content:center;
   font-weight:700;
-  font-size: clamp(12px,1.3vw,16px);
+  font-size: clamp(10px,1.3vw,16px);
   color:#fff;
   background:#D63031;
   border-radius:50%;
@@ -141,10 +140,17 @@ h1{
   box-shadow: 0 8px 16px rgba(0,0,0,0.25);
 }
 
-/* Extra responsive tweaks */
-@media (max-width:500px){
-  body{ padding: 12px; }
-  .header-row{ gap:8px; }
+/* Extra responsive tweaks voor zeer smalle schermen */
+@media (max-width: 380px){
+  :root{
+    --w: 50px;
+    --gap: 4px;
+  }
+  body{ padding: 10px; }
+  h1{ font-size: 14px; padding: 8px 10px; }
+  .header{ font-size: 9px; padding: 2px 1px; }
+  .door{ font-size: 10px; }
+  .freak-placeholder{ font-size: 9px; }
 }
 </style>
 </head>
