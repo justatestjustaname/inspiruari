@@ -1,337 +1,211 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Inspiruari Kalender - Testmodus</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Adventskalender</title>
+
 <style>
-:root{
-  --w: clamp(60px, 12vw, 140px);       /* kolombreedte schaalbaar */
-  --gap: clamp(6px, 2vw, 24px);        /* grid-gap schaalbaar */
-  --grad: linear-gradient(90deg,#6C5CE7,#FD9644,#00B894,#0984E3,#D63031);
-}
+    /* --- Moving Gradient Background --- */
+    .bg-gradient{
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.9;
+        background: linear-gradient(120deg,
+            rgba(108,92,231,0.85) 0%,
+            rgba(253,150,68,0.75) 25%,
+            rgba(0,184,148,0.70) 50%,
+            rgba(9,132,227,0.70) 75%,
+            rgba(214,48,49,0.75) 100%);
+        background-size: 200% 200%;
+    }
 
-body{
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  background:#f4f6f8;
-  padding: clamp(12px, 3vw, 34px);
-  display:flex;
-  align-items:center;
-  flex-direction:column;
-  gap: clamp(10px, 2vw, 18px);
-}
+    .bg-gradient::before{
+        content: "";
+        position: absolute;
+        inset: -15%;
+        background: inherit;
+        filter: blur(20px) saturate(1.05);
+        transform-origin: 50% 50%;
+        will-change: transform;
+        animation: bg-rotate 28s linear infinite;
+        backface-visibility: hidden;
+    }
 
-h1{
-  margin:0;
-  padding: clamp(10px,2vw,36px);
-  border-radius:12px;
-  background:var(--grad);
-  color:#fff;
-  font-weight:700;
-  font-size: clamp(16px, 2.5vw, 28px);
-  text-align:center;
-}
+    @keyframes bg-rotate {
+        0%   { transform: translate3d(0,0,0) rotate(0deg) scale(1); }
+        25%  { transform: translate3d(-3%,2%,0) rotate(8deg)  scale(1.02); }
+        50%  { transform: translate3d(0,4%,0) rotate(16deg) scale(1.01); }
+        75%  { transform: translate3d(3%,-2%,0) rotate(8deg)  scale(1.03); }
+        100% { transform: translate3d(0,0,0) rotate(0deg)  scale(1); }
+    }
 
-.header-row{
-  display:grid;
-  grid-template-columns: repeat(5, var(--w));
-  gap: var(--gap);
-}
+    @media (prefers-reduced-motion: reduce) {
+        .bg-gradient::before {
+            animation: none;
+            filter: none;
+            opacity: 0.6;
+        }
+    }
 
-.header{
-  width: var(--w);
-  padding: 4px 2px;
-  border-radius:10px;
-  color:#fff;
-  text-align:center;
-  font-weight:600;
-  font-size: clamp(10px, 1.2vw, 14px);
-}
+    /* --- Content wrapper (everything above background) --- */
+    .content {
+        position: relative;
+        z-index: 1;
+    }
 
-.h-mon{ background:#6C5CE7; }
-.h-tue{ background:#FD9644; }
-.h-wed{ background:#00B894; }
-.h-thu{ background:#0984E3; }
-.h-fri{ background:#D63031; }
 
-.calendar{
-  display:grid;
-  grid-template-columns: repeat(5, var(--w));
-  gap: var(--gap);
-  justify-content: start;
-  overflow-x: auto;
-  padding-bottom: 10px;
-}
+    /* --- Existing Styling --- */
 
-.day{
-  width: var(--w);
-  height: var(--w);
-  border-radius:50%;
-  position:relative;
-  overflow:hidden;
-  box-shadow: 0 8px 22px rgba(0,0,0,0.12);
-  background:#eee;
-  display:block;
-}
+    body {
+        margin: 0;
+        font-family: sans-serif;
+        color: white;
+        text-align: center;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
 
-.thumb{
-  position:absolute;
-  inset:0;
-  width:150%;
-  height:150%;
-  top:-25%;
-  left:-25%;
-  object-fit:cover;
-  pointer-events:none;
-}
+    h1 {
+        margin-top: 20px;
+        font-size: 2.2em;
+        text-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
 
-.link-layer{
-  position:absolute;
-  inset:0;
-  z-index:2;
-  display:block;
-}
+    .header-row {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        width: 90%;
+        max-width: 900px;
+        margin-top: 25px;
+        font-weight: bold;
+        opacity: 0.9;
+    }
 
-.door{
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-  z-index:3;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  font-weight:700;
-  font-size: clamp(12px,1.5vw,18px);
-  cursor:pointer;
-  transform-origin:left center;
-  transition: transform 0.62s cubic-bezier(.2,.9,.2,1), box-shadow .25s ease;
-  backdrop-filter: blur(3px);
-  background: rgba(0,0,0,0.48);
-}
-.door.mon{ background: rgba(108,92,231,0.68); }
-.door.tue{ background: rgba(253,150,68,0.68); }
-.door.wed{ background: rgba(0,184,148,0.68); }
-.door.thu{ background: rgba(9,132,227,0.68); }
-.door.fri{ background: rgba(214,48,49,0.68); }
+    .calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        width: 90%;
+        max-width: 900px;
+        gap: 10px;
+        margin-top: 10px;
+        padding-bottom: 40px;
+    }
 
-.door.open{
-  transform: rotateY(-100deg);
-  box-shadow: 0 18px 36px rgba(0,0,0,0.18);
-}
+    .day {
+        perspective: 800px;
+        transform-style: preserve-3d;
+        position: relative;
+        width: 100%;
+        padding-bottom: 100%;
+    }
 
-.freak-placeholder{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:700;
-  font-size: clamp(10px,1.3vw,16px);
-  color:#fff;
-  background:#D63031;
-  border-radius:50%;
-  width:100%;
-  height:100%;
-  text-align:center;
-  pointer-events:none;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.freak-placeholder:hover{
-  transform: scale(1.05);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
-}
+    .door {
+        position: absolute;
+        top:0; left:0; right:0; bottom:0;
+        background: rgba(255,255,255,0.15);
+        border: 2px solid rgba(0,0,0,0.2);
+        border-radius: 10px;
+        backdrop-filter: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 2em;
+        cursor: pointer;
+        transform-origin: left;
+        transition: transform 0.6s ease;
+        user-select: none;
+        backface-visibility: hidden;
+    }
 
-/* Extra responsive tweaks voor zeer smalle schermen */
-@media (max-width: 380px){
-  :root{
-    --w: 50px;
-    --gap: 4px;
-  }
-  body{ padding: 10px; }
-  h1{ font-size: 14px; padding: 8px 10px; }
-  .header{ font-size: 9px; padding: 2px 1px; }
-  .door{ font-size: 10px; }
-  .freak-placeholder{ font-size: 9px; }
-}
+    .door.open {
+        transform: rotateY(-100deg);
+    }
 </style>
+
 </head>
 <body>
 
-<h1>Inspiruari Kalender - Testmodus</h1>
+<!-- Moving background -->
+<div class="bg-gradient" aria-hidden="true"></div>
 
-<div class="header-row" aria-hidden="true">
-  <div class="header h-mon">Makers Maandag</div>
-  <div class="header h-tue">Docu Dinsdag</div>
-  <div class="header h-wed">Cine Woensdag</div>
-  <div class="header h-thu">Designer Donderdag</div>
-  <div class="header h-fri">Freaky Vrijdag</div>
+<!-- Content -->
+<div class="content">
+
+    <h1>Adventskalender</h1>
+
+    <div class="header-row">
+        <div>Ma</div><div>Di</div><div>Wo</div><div>Do</div><div>Vr</div><div>Za</div><div>Zo</div>
+    </div>
+
+    <div class="calendar" id="calendar"></div>
+
 </div>
 
-<div class="calendar" id="calendar" aria-live="polite"></div>
-
 <script>
-// ---------------------------
-// Data
-// ---------------------------
-const days = [
-  ['6','7','8','9','10'],
-  ['13','14','15','16','17'],
-  ['20','21','22','23','24'],
-  ['27','28','29','30','31']
-];
-
-const linksPerColumn = [
-  ['https://youtu.be/CQ9iK_yTWxs','https://youtu.be/vBWdYrO6y_E','https://youtu.be/2fY-iSzbls8','https://youtu.be/rhRpxYhyavQ'],
-  ['https://youtu.be/oHJBdDSTbLw','https://youtu.be/Pn7VdmcCjcA','https://youtu.be/ncM8eIvI1Lc','https://youtu.be/aA_ZHAs4M9k'],
-  ['https://youtu.be/wQKZlps9W0k','https://youtu.be/6MUcuqbGTxc','https://youtu.be/P-4tFdUWn1Q','https://youtu.be/0YMCWR8jzpU'],
-  ['https://youtu.be/DjA0oiMI3ME','https://youtu.be/rY_b3y9RMUc','https://youtu.be/pJgvgD-vjIc','https://youtu.be/dGFLzIk9WG8'],
-  ['https://www.instagram.com/reel/DRxKAGqjLSd/?igsh=eGRkYjNubGF2M3Aw','https://www.youtube.com/watch?v=KRZzq801s_A','https://www.instagram.com/reel/DO8d-MNiFOU/?igsh=MTBra2F1OGVwc2F6eg==','https://vimeo.com/1019818521']
-];
-
-const calendar = document.getElementById('calendar');
-
-
-// ---------------------------
-// AudioContext (iPhone-safe)
-// ---------------------------
-let audioCtx = null;
+/* --- Audio Fix (correct sample rate & resume) --- */
+let audioCtx;
 
 function ensureAudioContext() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-}
-
-// iOS moet eerst user-interactie hebben gehad
-['click', 'touchstart'].forEach(ev => {
-  document.body.addEventListener(ev, ensureAudioContext, { once: true });
-});
-
-
-// ---------------------------
-// Sounds
-// ---------------------------
-function playWoosj() {
-  ensureAudioContext();
-  if (!audioCtx) return;
-
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.4);
-
-  gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-
-  osc.connect(gain).connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.4);
-}
-
-function playClick() {
-  ensureAudioContext();
-  if (!audioCtx) return;
-
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-
-  osc.type = 'square';
-  osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
-
-  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-
-  osc.connect(gain).connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.08);
-}
-
-
-// ---------------------------
-// Thumbnail helpers
-// ---------------------------
-function getYoutubeId(url) {
-  if (!url) return null;
-  const m = url.match(/(?:v=|youtu\.be\/|v\/|watch\?v=)([A-Za-z0-9_\-]+)/);
-  return m ? m[1] : null;
-}
-
-function thumbFor(url) {
-  const id = getYoutubeId(url);
-  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
-}
-
-
-// ---------------------------
-// Build calendar
-// ---------------------------
-days.forEach((week, r) => {
-  week.forEach((day, c) => {
-
-    // Day wrapper
-    const wrapper = document.createElement('div');
-    wrapper.className = 'day';
-
-    const url = (linksPerColumn[c] && linksPerColumn[c][r]) ? linksPerColumn[c][r] : '';
-
-    // Thumbnail or freak placeholder
-    const thumb = thumbFor(url);
-
-    if (thumb && c !== 4) {
-      const img = document.createElement('img');
-      img.src = thumb;
-      img.alt = `Thumbnail dag ${day}`;
-      img.className = 'thumb';
-      wrapper.appendChild(img);
-    } else if (c === 4) {
-      const placeholder = document.createElement('div');
-      placeholder.className = 'freak-placeholder';
-      placeholder.textContent = 'Freak!';
-      wrapper.appendChild(placeholder);
+    if (!audioCtx) {
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: 48000
+            });
+        } catch {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
     }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+}
 
-    // Link layer
-    const a = document.createElement('a');
-    a.href = url || '#';
-    a.className = 'link-layer';
-    a.target = '_blank';
+/* Simple 'door click' sound */
+function playDoorSound() {
+    ensureAudioContext();
 
-    // iPhone/Safari blokkeert target=_blank soms → handmatig oplossen
-    a.addEventListener('click', ev => {
-      ev.preventDefault();
-      playClick();
-      if (url) window.open(url, '_blank');
-    });
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
 
-    wrapper.appendChild(a);
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.25);
 
-    // Door button
-    const door = document.createElement('button');
-    door.type = 'button';
-    door.className = 'door';
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
 
-    const weekdayClass = ['mon', 'tue', 'wed', 'thu', 'fri'][c] || 'mon';
-    door.classList.add(weekdayClass);
-    door.textContent = day;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.25);
+}
 
-    door.addEventListener('click', () => {
-      door.classList.toggle('open');
-      playWoosj();
-    });
+/* Build calendar */
+(function(){
+    const calendar = document.getElementById("calendar");
+    for (let i = 1; i <= 24; i++) {
+        const day = document.createElement("div");
+        day.className = "day";
 
-    wrapper.appendChild(door);
-    calendar.appendChild(wrapper);
-  });
-});
+        const door = document.createElement("div");
+        door.className = "door";
+        door.textContent = i;
+
+        door.addEventListener("click", () => {
+            if (!door.classList.contains("open")) {
+                door.classList.add("open");
+                playDoorSound();
+            }
+        });
+
+        day.appendChild(door);
+        calendar.appendChild(day);
+    }
+})();
 </script>
-
-
 
 </body>
 </html>
-
-
