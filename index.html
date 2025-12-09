@@ -53,10 +53,12 @@ h1{
 .h-fri{ background:#D63031; }
 
 .calendar{
-  display:grid;
+  display: grid;
   grid-template-columns: repeat(5, var(--w));
   gap: var(--gap);
-  justify-content:center;
+  justify-content: start;   /* links uitlijnen */
+  overflow-x: auto;         /* horizontaal scrollen mogelijk */
+  padding-bottom: 10px;     /* ruimte voor scroll */
 }
 
 .day{
@@ -169,16 +171,16 @@ const days = [
 // Links per kolom/weekdag
 const linksPerColumn = [
   [
-    'https://youtu.be/CQ9iK_yTWxs',
+    'https://youtu.be/sLzQCKBHQy0',
     'https://youtu.be/vBWdYrO6y_E',
-    'https://youtu.be/2fY-iSzbls8',
+    'https://youtu.be/509GVJ3UmxU',
     'https://youtu.be/rhRpxYhyavQ'
   ],
   [
-    'https://youtu.be/oHJBdDSTbLw',
-    'https://youtu.be/Pn7VdmcCjcA',
     'https://youtu.be/ncM8eIvI1Lc',
-    'https://youtu.be/aA_ZHAs4M9k'
+    'https://youtu.be/aA_ZHAs4M9k',
+    'https://youtu.be/Pn7VdmcCjcA',
+    'https://youtu.be/NeE1PnDGEkw'
   ],
   [
     'https://youtu.be/wQKZlps9W0k',
@@ -188,10 +190,9 @@ const linksPerColumn = [
   ],
   [
     'https://youtu.be/DjA0oiMI3ME',
-    'https://youtu.be/rY_b3y9RMUc',
-    'https://youtu.be/pJgvgD-vjIc',
-
-    'https://youtu.be/dGFLzIk9WG8'
+    'https://youtu.be/Hr_o5xQaQNU',
+    'https://youtu.be/q7AtvlsHEd8',
+    'https://youtu.be/NW7IuA6r99c'
   ],
   [
     'https://www.instagram.com/reel/DRxKAGqjLSd/?igsh=eGRkYjNubGF2M3Aw',
@@ -205,9 +206,12 @@ const calendar = document.getElementById('calendar');
 
 // Web Audio API
 const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-function ensureAudioContext(){
-  if(audioCtx.state==='suspended'){ audioCtx.resume(); }
-}
+function ensureAudioContext(){ if(audioCtx.state==='suspended'){ audioCtx.resume(); } }
+
+// start audio bij eerste interactie (mobiel)
+document.body.addEventListener('click', ()=>{ audioCtx.resume(); }, {once:true});
+document.body.addEventListener('touchstart', ()=>{ audioCtx.resume(); }, {once:true});
+
 function playWoosj(){
   ensureAudioContext();
   const osc = audioCtx.createOscillator();
@@ -268,7 +272,7 @@ days.forEach((week,r)=>{
     a.target='_blank';
     a.addEventListener('click', ev=>{
       playClick(); // geluid bij klik
-      // link opent altijd, deuren hoeven niet open te zijn
+      // link opent altijd
     });
     wrapper.appendChild(a);
 
