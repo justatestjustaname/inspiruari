@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Inspiruari Kalender - Mobile Friendly</title>
+<title>Inspiruari Kalender</title>
 <style>
-:root {
+:root{
   --w:140px;
   --gap:24px;
 }
@@ -19,7 +19,8 @@ body{
   animation: gradientMove 30s ease infinite;
   background-attachment: fixed;
   display:flex;
-  justify-content:center;
+  flex-direction:column;
+  align-items:center;
 }
 
 /* Gradient animatie */
@@ -29,31 +30,25 @@ body{
   100%{ background-position:0% 50%; }
 }
 
-/* Kalender wrapper */
-.calendar-wrapper {
-  display: grid;
+h1{
+  margin:0 0 20px 0;
+  padding:18px 36px;
+  border-radius:12px;
+  background: rgba(255,255,255,0.2);
+  color:#fff;
+  font-weight:700;
+  font-size:28px;
+  text-align:center;
+}
+
+/* Desktop grid */
+.calendar{
+  display:grid;
   grid-template-columns: repeat(5, var(--w));
   gap: var(--gap);
+  justify-content:center;
 }
 
-.column {
-  display:flex;
-  flex-direction:column;
-  gap: 18px;
-}
-
-/* Header */
-.column-header{
-  text-align:center;
-  font-weight:700;
-  font-size:16px;
-  color:#fff;
-  padding:8px;
-  border-radius:10px;
-  background: rgba(0,0,0,0.3);
-}
-
-/* Dag-knoppen */
 .day{
   width:var(--w);
   height:var(--w);
@@ -73,17 +68,54 @@ body{
 }
 .day:hover{ transform: scale(1.05); }
 
-/* Maandag t/m vrijdag kleuren */
-.mon{ background:#6C5CE7; }
-.tue{ background:#FD9644; }
-.wed{ background:#00B894; }
-.thu{ background:#0984E3; }
-.fri{ background:#D63031; }
+.thumb{
+  position:absolute;
+  inset:0;
+  width:150%;
+  height:150%;
+  top:-25%;
+  left:-25%;
+  object-fit:cover;
+  pointer-events:none;
+}
+
+.link-layer{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  display:block;
+}
+
+.door{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  z-index:3;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-weight:700;
+  font-size:18px;
+  cursor:pointer;
+  transform-origin:left center;
+  transition: transform 0.62s cubic-bezier(.2,.9,.2,1), box-shadow .25s ease;
+  backdrop-filter: blur(3px);
+  background: rgba(0,0,0,0.48);
+}
+.door.mon{ background: rgba(108,92,231,0.68); }
+.door.tue{ background: rgba(253,150,68,0.68); }
+.door.wed{ background: rgba(0,184,148,0.68); }
+.door.thu{ background: rgba(9,132,227,0.68); }
+.door.fri{ background: rgba(214,48,49,0.68); }
+
+.door.open{
+  transform: rotateY(-100deg);
+  box-shadow: 0 18px 36px rgba(0,0,0,0.18);
+}
 
 /* Freaky Friday placeholder */
 .freak-placeholder{
-  width:100%;
-  height:100%;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -92,29 +124,34 @@ body{
   color:#fff;
   background:#D63031;
   border-radius:50%;
+  width:100%;
+  height:100%;
   text-align:center;
+  pointer-events:none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.freak-placeholder:hover{
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
 }
 
+/* Responsive mobiel */
 @media (max-width:780px){
-  /* mobiel: horizontaal scrollbare flex */
-  .calendar-wrapper {
+  .calendar{
     display:flex;
-    overflow-x:auto;
     gap:16px;
+    overflow-x:auto;
     padding-bottom:10px;
   }
-  .column{
-    flex:0 0 auto; /* width van column = inhoud */
-  }
-  :root{ --w:98px; }
+  .day{ width:98px; height:98px; font-size:16px; }
+  h1{ font-size:20px; padding:14px 20px; }
 }
 </style>
 </head>
 <body>
 
-<div class="calendar-wrapper" id="calendar-wrapper">
-  <!-- JS vult de kolommen -->
-</div>
+<h1>Inspiruari Kalender</h1>
+<div class="calendar" id="calendar"></div>
 
 <script>
 // Data
@@ -137,48 +174,47 @@ const linksPerColumn = [
 const weekdayClasses = ['mon','tue','wed','thu','fri'];
 const weekdayNames = ['Makers Maandag','Docu Dinsdag','Cine Woensdag','Designer Donderdag','Freaky Vrijdag'];
 
-const wrapper = document.getElementById('calendar-wrapper');
+const calendar = document.getElementById('calendar');
 
-// Maak kolommen
+// Maak kalender
 for(let c=0;c<5;c++){
-  const colDiv = document.createElement('div');
-  colDiv.className='column';
-
-  // Header
-  const header = document.createElement('div');
-  header.className='column-header';
-  header.textContent = weekdayNames[c];
-  colDiv.appendChild(header);
-
-  // Dagen
   for(let r=0;r<4;r++){
-    const dayDiv = document.createElement('div');
-    dayDiv.className = 'day ' + weekdayClasses[c];
-    dayDiv.textContent = days[c][r];
+    const wrapper=document.createElement('div');
+    wrapper.className='day ' + weekdayClasses[c];
+    wrapper.setAttribute('data-col',c);
+    wrapper.setAttribute('data-row',r);
 
-    // Freaky Friday placeholder
-    if(c===4){
-      dayDiv.textContent='';
-      const placeholder = document.createElement('div');
+    // Thumbnail of Freak placeholder
+    const url = linksPerColumn[c][r];
+    if(c!==4){ // Freaky Friday heeft placeholder
+      const img=document.createElement('img');
+      img.src = `https://img.youtube.com/vi/${url.split('youtu.be/')[1]}/hqdefault.jpg`;
+      img.className='thumb';
+      wrapper.appendChild(img);
+    } else {
+      const placeholder=document.createElement('div');
       placeholder.className='freak-placeholder';
       placeholder.textContent='Freak!';
-      dayDiv.appendChild(placeholder);
+      wrapper.appendChild(placeholder);
     }
 
-    // Link-layer
-    const a = document.createElement('a');
-    a.href = linksPerColumn[c][r];
+    // Link
+    const a=document.createElement('a');
+    a.href=url;
     a.target='_blank';
-    a.style.position='absolute';
-    a.style.inset='0';
-    a.style.display='block';
-    a.style.textDecoration='none';
-    dayDiv.appendChild(a);
+    a.className='link-layer';
+    wrapper.appendChild(a);
 
-    colDiv.appendChild(dayDiv);
+    // Door overlay
+    const door=document.createElement('button');
+    door.type='button';
+    door.className='door ' + weekdayClasses[c];
+    door.textContent = days[c][r];
+    door.addEventListener('click', ()=> door.classList.toggle('open'));
+    wrapper.appendChild(door);
+
+    calendar.appendChild(wrapper);
   }
-
-  wrapper.appendChild(colDiv);
 }
 </script>
 
